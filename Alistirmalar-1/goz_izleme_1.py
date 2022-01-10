@@ -1,0 +1,51 @@
+import cv2
+import numpy as np
+
+
+camera=cv2.VideoCapture("eye_motion.mp4")
+
+while True:
+    ret, frame = camera.read()
+
+    if ret is False:
+        break
+
+    roi=frame[80:210,230:450]
+
+    rows,cols,_=roi.shape
+
+    gray=cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
+
+    _,threshold=cv2.threshold(gray,3,255,cv2.THRESH_BINARY_INV)
+
+    contours,_=cv2.findContours(threshold,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+    contours=sorted(contours,key=lambda x: cv2.contourArea(x),reverse=True)  #icine girilen degerleri sıralar.ornegin a,b,cc,ddd,ss len() a=1,b=1,c=2,d=3,s=2
+                # ve bunları a,b,c,s,d diye sıralar
+                #yani kontur degerlerim bu alana göre sıralancak.reverse de True dedik ve alanı
+                #tersten sırala ve büyükten küçüye doğru sıralar
+
+    for cnt in contours: #kontursun içerisnde tuttuğu değerlerden en büyük alana sahip olana bir dikdörtgen çizicez ve bir daha çizmicez
+
+        (x,y,w,h)=cv2.boundingRect(cnt)
+
+        cv2.rectangle(roi,(x,y),(x+w,y+h),(255,0,0),2)
+
+        cv2.line(roi,(x+int(w/2),0),(x+int(w/2),rows),(0,255,0),2)
+        cv2.line(roi, (0, y+int(h/2)), (cols, y+int(h/2)), (0, 255, 0), 2)
+
+        break
+
+    frame[80:210,230:450]=roi
+
+    cv2.imshow("roi", roi)
+    cv2.imshow("frame",frame)
+
+
+    if cv2.waitKey(50) & 0xFF==ord("q"):
+        break
+
+
+
+camera.release()
+cv2.destroyAllWindows()
